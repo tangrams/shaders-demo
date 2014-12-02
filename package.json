@@ -1,0 +1,6 @@
+{
+  "name": "highways-demo",
+  "dependencies": {
+	"tangram": "git://github.com/tangrams/tangram.git"
+  }
+}
