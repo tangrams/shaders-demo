@@ -1,6 +1,6 @@
-# highways-demo
+# shader-demos
 
-A demo showing some contextual highway styles using the [Tangram](http://github.com/tangrams/tangram) library.
+A demo showing some ways to use GLSL shaders to draw maps with the [Tangram](http://github.com/tangrams/tangram) library.
 
 ### Installation
 
