@@ -11,9 +11,7 @@ camera:
 
 lighting:
     type: point
-    position: [0, 0, 200]
     ambient: 0.5
-    backlight: true
 
     # type: directional
     # direction: [-1, 0, -.5]
@@ -27,12 +25,6 @@ lighting:
     # ambient: 0.2
 
 modes:
-    # note: consider this syntax as a special case for global mode settings
-    # all:
-    #     shaders:
-    #         transforms:
-    #             fragment: { url: shaders/spotlight.glsl }
-
     water:
         extends: polygons
         animated: true
@@ -44,28 +36,6 @@ modes:
                     url: shaders/glsl-noise-periodic-3d.glsl
                 fragment:
                     url: shaders/noise.glsl
-
-    formica:
-        extends: polygons
-        shaders:
-            defines:
-                EFFECT_NOISE_TEXTURE: true
-            transforms:
-                globals:
-                    url: shaders/glsl-noise-periodic-3d.glsl
-                fragment:
-                    url: shaders/noise.glsl
-
-    colorbleed:
-        extends: polygons
-        animated: true
-        shaders:
-            defines:
-                EFFECT_COLOR_BLEED_ANIMATED: true
-            transforms:
-                fragment:
-                    - url: shaders/color_bleed.glsl
-                    # - url: shaders/spotlight.glsl
 
     rainbow:
         extends: polygons
@@ -124,67 +94,18 @@ modes:
                 vertex: position.z *= (sin(position.z + u_time) + 1.0); // elevator buildings
                 # vertex: { url: shaders/elevator.glsl }
 
-    breathe:
-        extends: polygons
-        animated: true
-        shaders:
-            # defines:
-            #     BREATHE_SCALE: 10
-            uniforms:
-                u_breathe_scale: 10
-                u_breathe_speed: 1
-            transforms:
-                globals:
-                    uniform float u_breathe_scale;
-                    uniform float u_breathe_speed;
-                vertex:
-                    position.xy += a_normal.xy * u_breathe_scale * smoothstep(0.25, 1., abs(sin(u_time * u_breathe_speed)));
-                # vertex: { url: shaders/breathe.glsl }
-
     dots:
         extends: polygons
         shaders:
             uniforms:
-                u_dot_grid_scale: 0.02
-                u_dot_scale: 0.07
-                u_dot_background_color: [.5, .2, .2]
+                u_dot_grid_scale: 0.01
+                u_dot_scale: 0.15
+                u_dot_background_color: [.071, .235, .42]
                 u_dot_color: [1, 1, 1]
             transforms:
                 globals: { url: shaders/dots.glsl }
                 fragment: color.rgb *= dots(v_world_position.xyz);
-                # fragment: color *= dots(v_world_position.xyz + vec3(0., 0., u_time * 25.)); // animated dots
-                # fragment: vec3 n = abs(v_normal); if (n.z > n.x && n.z > n.y) { color *= dots(v_world_position.xyz); } // apply only to up-facing surfaces
-
-    wood:
-        extends: polygons
-        shaders:
-            uniforms:
-                u_wood_color1: [.9, .5, .5]
-                u_wood_color2: [.5, .3, .1]
-                u_wood_eccentricity: 0.9
-                u_wood_twist: .0001
-                u_wood_scale: 50
-                u_wood_spacing: 1
-            transforms:
-                globals: { url: 'shaders/wood.glsl' }
-                fragment: color.rgb = wood(v_world_position.xyz) * lighting;
-        # buildPolygons: |
-        #     function (polygons, style, vertex_data) {
-        #         // Test overloading the geometry builder
-        #         // var c = Geo.polygonCentroidSimple(polygons[0]);
-        #         polygons = [ [ [ polygons[0][0][0], polygons[0][0][1], polygons[0][0][2], polygons[0][0][0] ] ] ];
-        #         this.parent.buildPolygons(polygons, style, vertex_data);
-        #     }
-
-    envmap:
-        extends: polygons
-        shaders:
-            defines:
-                LIGHTING_ENVIRONMENT: true
-            uniforms:
-                u_env_map: images/LitSphere_test_02.jpg
-            transforms:
-                # fragment: color = mix(color_prelight, color_prelight * lighting, sin(u_time) / 2. + .5); // fade lighting in and out
+                fragment: color *= dots(v_world_position.xyz + vec3(0., u_time * 25., u_time * 25.)); // animated dots
 
     # Halftone shader adapted from: http://webstaff.itn.liu.se/~stegu/webglshadertutorial/shadertutorial.html
     halftone:
@@ -244,7 +165,7 @@ modes:
         extends: polygons
         shaders:
             uniforms:
-                dot_frequency: 100.
+                dot_frequency: 40.
                 dot_scale: 1.5
                 true_color: false
 
@@ -372,39 +293,6 @@ modes:
                         color -= vec3(vPos.z * .01); // height factor
                     }
 
-    points:
-        shaders:
-            transforms:
-                # fragment: color += vec3(gl_FragCoord.x / u_resolution.x, 0.0, gl_FragCoord.y / u_resolution.y);
-                fragment: { url: shaders/color_bleed.glsl }
-
-    # polygons:
-    #     texcoords: true
-    #     shaders:
-    #         uniforms:
-    #             u_texture: images/LitSphere_test_02.jpg
-    #         transforms:
-    #             fragment: |
-    #                 color = vec3(v_texcoord.xy, 0.);
-    #                 //color = vec3(v_texcoord.x, mod(v_texcoord.y + u_time/2., 1.), 0.);
-    #                 //color = texture2D(u_texture, v_texcoord).rgb;
-    #                 //color = texture2D(u_texture, vec2(v_texcoord.x, mod(v_texcoord.y + u_time/2., 1.))).rgb;
-
-    ghosts:
-        extends: polygons
-        animated: true
-        texcoords: true
-        shaders:
-            uniforms:
-                u_texture: images/ghost_strip.gif
-            transforms:
-                fragment: |
-                    float number_of_frames = 2.;
-                    float frames_per_second = 2.;
-
-                    float offset = floor(mod(u_time * frames_per_second, 2.))*.5;
-                    color = texture2D(u_texture, (vec2(v_texcoord.x/number_of_frames, v_texcoord.y) + vec2(offset, 0.))).rgb;
-                    if (color == vec3(0.)) discard;
 
 layers:
     earth:
@@ -412,20 +300,13 @@ layers:
             default: [0.175, 0.175, 0.175]
 
     landuse:
-        interactive: true
         color:
             default: [0.5, 0.875, 0.5]
             pitch: [0.3, 0.675, 0.3]
-        # outline:
-        #     color:
-        #         default: [1, 1, 1]
-        #     width:
-        #         default: 1
 
     water:
         mode:
             name: water
-        interactive: true
         color:
             default: [0.5, 0.5, 0.875]
         outline:
@@ -496,67 +377,12 @@ layers:
                     function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
 
     buildings:
-        mode:
-            # name: popup
-            # name: breathe
-            # name: formica
-            # name: dots
-            # name: wood
-            # name: rainbow2
-            # name: windows
-            # name: colorhalftone
-            # name: palette
-            # name: envmap
-        # properties:
-        #     min_height: 50
-        # filter: function () { return feature.height >= properties.min_height; }
-        # filter: function () { return feature.name != null; }
-        # filter: function () { return Math.random() < 0.25; }
-        # filter: function () { return true; }
-        interactive: true
         color:
             # default: function () { var h = feature.height || 20; h = Math.min((h + 50) / 250, 1.0); return [h, h, h]; } // shade based on height
             # default: Style.color.randomColor
             # default: Style.color.pseudoRandomColor
             # default: Style.color.pseudoRandomGrayscale
-            # default: function () { if (feature.name || feature.kind) { return [(feature.name && 0.6) || 0.2, 0.2, (feature.kind && 0.6) || 0.2]; } else { return [0.6, 0.6, 0.6] }; }
-            default: |
-                function () {
-                    var c = [.6, .6, .6];
-                    if (feature.name || feature.kind) {
-                        c = [.2, .2, .2];
-                        c[0] = (feature.name && .6) || c[0];
-                        c[2] = (feature.kind && .6) || c[2];
-                    }
-                    return c;
-                }
+            default: function () { if (feature.name || feature.kind) { return [(feature.name && 0.6) || 0.2, 0.2, (feature.kind && 0.6) || 0.2]; } else { return [0.6, 0.6, 0.6] }; }
         extrude:
-            default: function () { return ((zoom >= 15 && feature.height > 20) || zoom >= 16) }
+            default: function () { return ((zoom >= 14 && feature.height > 20) || zoom >= 16) }
             # default: [[14, false], [15, true]]
-
-    pois:
-        mode:
-            name: points
-            # name: ghosts
-            # name: formica
-        filter: function () { return feature.name != null; }
-        # visible: false
-        interactive: true
-        # z:
-        #     default: 25
-        color:
-            default: [1, 1, 0]
-        size:
-            # default: 5
-            default: 5px
-            # default: Style.pixels(20) # for ghosts
-            # default: Style.pixels(function () { return Math.pow(1.2, zoom); })
-            # default: function () { return 2 * zoom; }
-
-    # places:
-    #     filter: function() { return (zoom >= 13); }
-    #     color: {
-    #         # default: [0.0, 1.0, 1.0]
-    #         default: function() { return feature.kind == 'administrative' ? [1, 0, 1] : [1, 1, 0]; }
-    #     size:
-    #         default: Style.pixels(5)

@@ -226,15 +226,11 @@
         options: {
             'None': '',
             'Elevator': 'elevator',
-            'Breathe': 'breathe',
             'Pop-up': 'popup',
             'Dots': 'dots',
-            'Wood': 'wood',
             'B&W Halftone': 'halftone',
             'Color Halftone': 'colorhalftone',
             'Windows': 'windows',
-            'Environment Map': 'envmap',
-            'Color Bleed': 'colorbleed',
             'Rainbow': 'rainbow'
         },
         setup: function (mode) {
@@ -429,8 +425,6 @@
                     scene.styles.layers.landuse.mode = { name: mode };
                     scene.styles.layers.earth.mode = { name: mode };
 
-                    scene.styles.layers.pois.visible = false;
-
                     this.state.dot_frequency = this.uniforms.dot_frequency;
                     this.folder.add(this.state, 'dot_frequency', 0, 200).onChange(function(value) {
                         this.uniforms.dot_frequency = value;
@@ -457,14 +451,12 @@
                     });
 
                     scene.styles.layers.earth.visible = false;
-                    scene.styles.layers.pois.visible = false;
                 }
             },
             'windows': {
                 camera: 'isometric', // force isometric
                 setup: function (mode) {
                     scene.styles.layers.buildings.mode = { name: mode };
-                    scene.styles.layers.pois.visible = false;
                 }
             },
             'envmap': {
@@ -607,66 +599,6 @@
             onChange(gl_mode_options.setup.bind(gl_mode_options));
     }
 
-    // Feature selection
-    function initFeatureSelection () {
-        // Selection info shown on hover
-        var selection_info = document.createElement('div');
-        selection_info.setAttribute('class', 'label');
-        selection_info.style.display = 'block';
-
-        // Show selected feature on hover
-        scene.container.addEventListener('mousemove', function (event) {
-            if (gui['feature info'] == false) {
-                if (selection_info.parentNode != null) {
-                    selection_info.parentNode.removeChild(selection_info);
-                }
-
-                return;
-            }
-
-            var pixel = { x: event.clientX, y: event.clientY };
-
-            scene.getFeatureAt(pixel).then(function(selection) {
-                var feature = selection.feature;
-                if (feature != null) {
-                    // console.log("selection map: " + JSON.stringify(feature));
-
-                    var label = '';
-                    if (feature.properties.name != null) {
-                        label = feature.properties.name;
-                    }
-
-                    // if (feature.properties.layer == 'buildings' && feature.properties.height) {
-                    //     if (label != '') {
-                    //         label += '<br>';
-                    //     }
-                    //     label += feature.properties.height + 'm';
-                    // }
-
-                    if (label != '') {
-                        selection_info.style.left = (pixel.x + 5) + 'px';
-                        selection_info.style.top = (pixel.y + 15) + 'px';
-                        selection_info.innerHTML = '<span class="labelInner">' + label + '</span>';
-                        scene.container.appendChild(selection_info);
-                    }
-                    else if (selection_info.parentNode != null) {
-                        selection_info.parentNode.removeChild(selection_info);
-                    }
-                }
-                else if (selection_info.parentNode != null) {
-                    selection_info.parentNode.removeChild(selection_info);
-                }
-            });
-
-            // Don't show labels while panning
-            if (scene.panning == true) {
-                if (selection_info.parentNode != null) {
-                    selection_info.parentNode.removeChild(selection_info);
-                }
-            }
-        });
-    }
-
     // Pre-render hook
     function preRender () {
         if (rS != null) { // rstats
@@ -708,7 +640,6 @@
             }
             updateURL();
 
-            initFeatureSelection();
         });
         layer.addTo(map);
 
