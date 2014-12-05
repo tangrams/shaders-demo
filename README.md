@@ -2,11 +2,13 @@
 
 A demo showing some ways to use GLSL shaders to draw maps with the [Tangram](http://github.com/tangrams/tangram) library.
 
-### Installation
+### To view:
 
-    npm install
+[http://tangrams.github.io/shader-demos](http://tangrams.github.io/shader-demos)
 
-Then start a web server in this directory:
+### To run locally:
+
+Download this repo, then start a web server in its directory:
 
     python -m SimpleHTTPServer 8000
     
