@@ -1,4 +1,4 @@
-# shader-demos
+# shaders-demo
 
 A demo showing some ways to use GLSL shaders to draw maps with the [Tangram](http://github.com/tangrams/tangram) library.
 
