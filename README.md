@@ -4,7 +4,7 @@ A demo showing some ways to use GLSL shaders to draw maps with the [Tangram](htt
 
 ### To view:
 
-[http://tangrams.github.io/shader-demos](http://tangrams.github.io/shader-demos)
+[http://tangrams.github.io/shaders-demo](http://tangrams.github.io/shaders-demo)
 
 ### To run locally:
 
