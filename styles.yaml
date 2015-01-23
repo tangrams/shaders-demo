@@ -1,30 +1,24 @@
+sources:
+    osm:
+        type: GeoJSONTileSource
+        url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.json
+
 camera:
     type: perspective
     # focal_length: 1
     focal_length: [[16, 2], [17, 2.5], [18, 3], [19, 4], [20, 6]] # pairs of [zoom, focal len]
     vanishing_point: [-250, -250] # relative to center of screen, in pixels
 
-    # type: isometric
-    # axis: [1, .5]
-
-    # type: flat
 
 lighting:
     type: point
-    ambient: 0.5
-
-    # type: directional
-    # direction: [-1, 0, -.5]
+    position: [0, 0, 200]
+    color: [1, 1, 1]
     # ambient: 0.5
+    backlight: true
 
-    # type: spotlight
-    # position: [0, 0, 500]
-    # direction: [0, 0, -1]
-    # inner_angle: 20
-    # outer_angle: 25
-    # ambient: 0.2
 
-modes:
+styles:
     water:
         extends: polygons
         animated: true
@@ -36,6 +30,30 @@ modes:
                     url: shaders/glsl-noise-periodic-3d.glsl
                 fragment:
                     url: shaders/noise.glsl
+
+    formica:
+        extends: polygons
+        shaders:
+            defines:
+                EFFECT_NOISE_TEXTURE: true
+            transforms:
+                globals:
+                    url: shaders/glsl-noise-periodic-3d.glsl
+                fragment:
+                    url: shaders/noise.glsl
+
+    colorbleed:
+        extends: polygons
+        animated: true
+        shaders:
+            defines:
+                EFFECT_COLOR_BLEED_ANIMATED: true
+            transforms:
+                fragment: |
+                    color .rgb+= lighting * vec3(gl_FragCoord.x / u_resolution.x, 0.0, gl_FragCoord.y / u_resolution.y);
+                    #if defined(EFFECT_COLOR_BLEED_ANIMATED)
+                        color.r += lighting.r * sin(u_time / 3.0);
+                    #endif
 
     rainbow:
         extends: polygons
@@ -50,270 +68,204 @@ modes:
                     }
                 fragment: |
                     vec3 c = vec3(v_world_position.z * .003 + u_time / 10., 1.0, 1.0);
-                    color = hsv2rgb(c);
+                    color.rgb = hsv2rgb(c);
 
     popup:
-        extends: polygons
-        shaders:
-            uniforms:
-                u_popup_radius: 330 # 225
-                u_popup_height: 3 # 1.1
-            transforms:
-                globals: |
-                    // Pop-up effect - 3d in center of viewport, fading to 2d at edges
-                    vec4 popup (vec4 position, const vec2 center, const float radius) {
-                        if (position.z > 0.) {
-                            float cd = distance(position.xy, center);
-                            float popup_fade_inner = radius * 2. / 3.; // 0.5
-                            float popup_fade_outer = radius; // 0.75
-                            if (cd > popup_fade_inner) {
-                                position.z *= 1.0 - smoothstep(popup_fade_inner, popup_fade_outer, cd);
-                            }
-                            // const float zoom_boost_start = 15.0;
-                            // const float zoom_boost_end = 17.0;
-                            // const float zoom_boost_magnitude = 0.75;
-                            // position.z *= 1.0 + (1.0 - smoothstep(zoom_boost_start, zoom_boost_end, u_map_zoom)) * zoom_boost_magnitude;
-                        }
-
-                        return position;
-                    }
-
-                    uniform float u_popup_radius;
-                    uniform float u_popup_height;
-                vertex: |
-                    position.z *= u_popup_height; // boost height for exaggerated visual effect
-                    position = popup(position, vec2(0., 0.), u_popup_radius * u_meters_per_pixel);
-                # vertex: { url: shaders/popup.glsl }
-                # fragment: { url: shaders/color_bleed.glsl }
+        url: styles/popup.yaml
 
     elevator:
         extends: polygons
         animated: true
         shaders:
             transforms:
-                vertex: position.z *= (sin(position.z + u_time) + 1.0); // elevator buildings
-                # vertex: { url: shaders/elevator.glsl }
+                vertex: |
+                    // Elevator buildings
+                    if (position.z > 0.01) {
+                        position.z *= (sin(position.z + u_time) + 1.0);
+                    }
+
+    breathe:
+        url: styles/breathe.yaml
 
     dots:
+        url: styles/dots.yaml
+
+    wood:
+        url: styles/wood.yaml
+
+    envmap:
         extends: polygons
         shaders:
+            defines:
+                LIGHTING_ENVIRONMENT: true
             uniforms:
-                u_dot_grid_scale: 0.01
-                u_dot_scale: 0.15
-                u_dot_background_color: [.071, .235, .42]
-                u_dot_color: [1, 1, 1]
+                u_env_map: images/LitSphere_test_02.jpg
             transforms:
-                globals: { url: shaders/dots.glsl }
-                fragment: color.rgb *= dots(v_world_position.xyz);
-                fragment: color *= dots(v_world_position.xyz + vec3(0., u_time * 25., u_time * 25.)); // animated dots
+                # fragment: color = mix(color_prelight, color_prelight * lighting, sin(u_time) / 2. + .5); // fade lighting in and out
 
-    # Halftone shader adapted from: http://webstaff.itn.liu.se/~stegu/webglshadertutorial/shadertutorial.html
     halftone:
-        extends: polygons
-        shaders:
-            uniforms:
-                # halftone_colored: false # boolean to flip colored dots on and off
-            transforms:
-                globals: |
-                    // uniform bool halftone_colored;
+        url: styles/halftone.yaml
 
-                    const float dot_frequency = 100.4748637184972;
-
-                    // Antialiasing
-                    float aastep(float threshold, float value) {
-                        const float scale = 2.;
-                        const float y_rot = 0.;
-                        float afwidth = dot_frequency * (1.0/200.0) / scale / cos(y_rot);
-                        return smoothstep(threshold-afwidth, threshold+afwidth, value);
-                    }
-
-                fragment: |
-                    // Distance to nearest point in a grid of
-                    // (frequency x frequency) points over the unit square
-                    // Scale dot size for a subset of zoom
-                    const float max_scale_zoom = 19.;
-                    const float min_scale_zoom = 17.;
-                    const float scale_zoom_factor = .25;
-                    float zoom_frequency = dot_frequency;
-                    zoom_frequency *= 1. + ((max_scale_zoom - clamp(u_map_zoom, min_scale_zoom, max_scale_zoom)) * scale_zoom_factor);
-
-                    // Sample based on screenspace
-                    const float pixel_scale = 695.; // arbitrary pixel_scale based on playing w/values
-                    vec2 st = gl_FragCoord.xy / pixel_scale;
-
-                    // But peg to map center so dots on ground plane stay in place as we move
-                    // (there's what looks like some floating point precision crawl, but it's not too bad)
-                    const float dot_wrap = 1000.;
-                    st += mod(u_map_center / u_meters_per_pixel, dot_wrap) / pixel_scale;
-
-                    // Rotate dot & find nearest dot distance
-                    vec2 st2 = mat2(0.707, -0.707, 0.707, 0.707) * st;
-                    vec2 nearest = 2.0 * fract(zoom_frequency * st2) - 1.0;
-                    float dist = length(nearest);
-
-                    // Modulate the size of the dots
-                    float radius = clamp(sqrt(1.0 - color.g), 0.001, 1.); // use green channel, clamp to avoid giant dot
-
-                    // Color mix
-                    const vec3 white = vec3(1.0, 1.0, 1.0);
-                    const vec3 black = vec3(0.0, 0.0, 0.0);
-                    // color = mix(black + (color * float(halftone_colored)), white, aastep(radius, dist));
-                    color = mix(black, white, aastep(radius, dist));
-
-    # Halftone shader adapted from: http://webstaff.itn.liu.se/~stegu/webglshadertutorial/shadertutorial.html
     colorhalftone:
-        extends: polygons
-        shaders:
-            uniforms:
-                dot_frequency: 40.
-                dot_scale: 1.5
-                true_color: false
-
-            transforms:
-                globals: |
-                    uniform float dot_frequency;
-                    uniform float dot_scale;
-                    uniform bool true_color;
-
-                    // Antialiasing
-                    float aastep(float threshold, float value) {
-                        const float scale = 2.;
-                        const float y_rot = 0.;
-                        float afwidth = dot_frequency * (1.0/200.0) / scale / cos(y_rot);
-                        return smoothstep(threshold-afwidth, threshold+afwidth, value);
-                    }
-
-                fragment: |
-                    // Distance to nearest point in a grid of
-                    // (frequency x frequency) points over the unit square
-                    // Scale dot size for a subset of zoom
-                    const float max_scale_zoom = 19.;
-                    const float min_scale_zoom = 17.;
-                    const float scale_zoom_factor = .25;
-                    float zoom_frequency = dot_frequency;
-                    zoom_frequency *= 1. + ((max_scale_zoom - clamp(u_map_zoom, min_scale_zoom, max_scale_zoom)) * scale_zoom_factor);
-
-                    // Sample based on screenspace
-                    const float pixel_scale = 695.; // arbitrary pixel_scale based on playing w/values
-                    vec2 st = gl_FragCoord.xy / pixel_scale;
-
-                    // But peg to map center so dots on ground plane stay in place as we move
-                    // (there's what looks like some floating point precision crawl, but it's not too bad)
-                    const float dot_wrap = 1000.;
-                    st += mod(u_map_center / u_meters_per_pixel, dot_wrap) / pixel_scale;
-
-                    vec3 white = vec3(0.97);
-                    vec3 black = vec3(0.1);
-
-                    // Perform a rough RGB-to-CMYK conversion
-                    vec4 cmyk;
-                    cmyk.xyz = 1.0 - color;
-                    cmyk.w = min(cmyk.x, min(cmyk.y, cmyk.z)); // Create K
-                    if (!true_color) {cmyk.xyz -= cmyk.w;} // Subtract K equivalent from CMY
-
-                    // Distance to nearest point in a grid of
-                    // (frequency x frequency) points over the unit square
-                    vec2 Kst = zoom_frequency*mat2(0.707, -0.707, 0.707, 0.707)*st;
-                    vec2 Kuv = dot_scale*fract(Kst)-(dot_scale/2.);
-                    float k = aastep(0.0, sqrt(cmyk.w)-length(Kuv));
-                    vec2 Cst = zoom_frequency*mat2(0.966, -0.259, 0.259, 0.966)*st;
-                    vec2 Cuv = dot_scale*fract(Cst)-(dot_scale/2.);
-                    float c = aastep(0.0, sqrt(cmyk.x)-length(Cuv));
-                    vec2 Mst = zoom_frequency*mat2(0.966, 0.259, -0.259, 0.966)*st;
-                    vec2 Muv = dot_scale*fract(Mst)-(dot_scale/2.);
-                    float m = aastep(0.0, sqrt(cmyk.y)-length(Muv));
-                    vec2 Yst = zoom_frequency*st; // 0 deg
-                    vec2 Yuv = dot_scale*fract(Yst)-(dot_scale/2.);
-                    float y = aastep(0.0, sqrt(cmyk.z)-length(Yuv));
-
-                    vec3 rgbscreen = 1.0 - 0.9*vec3(c,m,y); // most saturated color = .9
-                    rgbscreen = mix(rgbscreen, black, 0.85*k); // darkest black = .85
-
-                    // Modulate the size of the dots
-                    //float luminance = (0.299 * color.r + 0.587 * color.g + 0.114 * color.b); // HSP color model
-                    //float radius = clamp(sqrt(1.0 - luminance), 0.001, 1.); // use luminance, clamp to avoid giant dot
-
-                    color = rgbscreen;
+        url: styles/halftone.yaml
 
     windows:
-        extends: polygons
-        animated: true
+        url: styles/windows.yaml
 
+    points:
+        shaders:
+            transforms:
+                fragment: color.rgb += vec3(gl_FragCoord.x / u_resolution.x, 0.0, gl_FragCoord.y / u_resolution.y);
+
+
+    icons:
+        extends: polygons
+        animated: true # only needed for bouncy effect
+        texcoords: true
+        texture:
+            url: images/poi_icons_32.png
+            filtering: nearest
+            sprites:
+                # each sprite is defined as: [x origin, y origin, width, height]
+                plane: [0, 0, 32, 32]
+                tree: [0, 185, 32, 32]
+                sunburst: [0, 629, 32, 32]
+                restaurant: [0, 777, 32, 32]
+                cafe: [0, 814, 32, 32]
+                museum: [0, 518, 32, 32]
         shaders:
             uniforms:
-                u_frequency: 10.
-                u_windowColor: [1., 1., .9]
-                u_buildingColor: [.8, .8, .7]
-                u_roofColor: [.5, .4, .5]
+                bouncy: true
             transforms:
-                globals: |
-                    uniform float u_frequency;
-                    uniform vec3 u_windowColor;
-                    uniform vec3 u_buildingColor;
-                    uniform vec3 u_roofColor;
-
-                    // 3d noise
-                    vec4 v_mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
-                    vec4 perm(vec4 x){return v_mod289(((x * 34.0) + 1.0) * x);}
-                    float noise(vec3 p){
-                        vec3 a = floor(p);
-                        vec3 d = p - a;
-                        d = d * d * (3.0 - 2.0 * d);
-
-                        vec4 b = a.xxyy + vec4(0.0, 1.0, 0.0, 1.0);
-                        vec4 k1 = perm(b.xyxy);
-                        vec4 k2 = perm(k1.xyxy + b.zzww);
-
-                        vec4 c = k2 + a.zzzz;
-                        vec4 k3 = perm(c);
-                        vec4 k4 = perm(c + 1.0);
-
-                        vec4 o1 = fract(k3 * (1.0 / 41.0));
-                        vec4 o2 = fract(k4 * (1.0 / 41.0));
-
-                        vec4 o3 = o2 * d.z + o1 * (1.0 - d.z);
-                        vec2 o4 = o3.yw * d.x + o3.xz * (1.0 - d.x);
-
-                        return o4.y * d.y + o4.x * (1.0 - d.y);
+                vertex: |
+                    // Bouncy icons
+                    if (bouncy) {
+                        position.y += sin(v_world_position.y + u_time*3.) * 10.;
                     }
                 fragment: |
-                    vec3 vPos = v_world_position.xyz / u_frequency;
-                    vec3 mask = mix(vec3(0.0), vec3(1.0), step(fract(mod(vPos, .9)), vec3(.4, .4, .6)));
+                    //color.rgb /= lighting; // reverse lighting hack (replace w/shader lighting block/defines)
 
-                    if (mask.x + mask.y + mask.z > .5) {
-                        color = u_buildingColor;
-                        color -= vec3(vPos.z * .1); // height factor
-                    } else {
-                        float noiseColor = 2. * noise(v_world_position.xyz * 0.1 + (floor(u_time * 5.) / 10.));
-                        color = u_windowColor * noiseColor;
-                    }
+    uv_test:
+        extends: polygons
+        texcoords: true
+        shaders:
+            transforms:
+                fragment: |
+                    color.rgb = vec3(v_texcoord.xy, 0.);
+                    //color.rgb = vec3(v_texcoord.x, mod(v_texcoord.y + u_time/2., 1.), 0.);
+                    //color.rgb = texture2D(u_texture, uv).rgb;
 
-                    if (v_normal.z > .6 || v_normal.z < -.6) {
-                        color = u_roofColor;
-                        color -= vec3(vPos.z * .01); // height factor
-                    }
+    # dynamic uniform tests
+    # polygons:
+    #     texcoords: true
+    #     shaders:
+    #         uniforms:
+    #             # u_texture: images/LitSphere_test_02.jpg
+    #             # u_offset: { one: .5, two: .5 }
 
+    #             u_material:
+    #                 - texture: images/matball01.jpg
+    #                   field: 1
+
+    #                 - texture: images/sunset.jpg
+    #                   field: 2
+
+    #             u_mtex:
+    #                 - images/matball01.jpg
+    #                 - images/sunset.jpg
+
+    #             u_vecs: [[1,2,3],[4,5,6],[7,8,9]]
+
+    #             u_nested:
+    #                 one: 1
+    #                 child:
+    #                     two: 2
+
+    #         transforms:
+    #             globals: |
+    #                 /*struct Material {
+    #                     sampler2D texture;
+    #                     float field;
+    #                 };*/
+    #                 //uniform Material u_material[2];
+
+    #                 //uniform sampler2D u_mtex[2];
+    #                 //uniform vec3 u_vecs[3];
+
+    #                 varying float v_layer;
+
+    #             vertex: |
+    #                 v_layer = a_layer;
+
+    #             fragment: |
+    #                 // color = texture2D(u_texture, v_texcoord + vec2(u_offset.one, u_offset.two));
+    #                 //float t = mod(v_layer + u_vecs[0].y, 3.);
+    #                 float t = mod(v_layer + u_nested.one, 3.);
+    #                 if (t == 0.) {
+    #                     color = texture2D(u_texture, v_texcoord);
+    #                 }
+    #                 else if (t == 1.) {
+    #                     color = texture2D(u_material[0].texture, v_texcoord);
+    #                     //color = texture2D(u_mtex[0], v_texcoord);
+    #                 }
+    #                 else {
+    #                     color = texture2D(u_material[1].texture, v_texcoord);
+    #                     //color = texture2D(u_mtex[1], v_texcoord);
+    #                 }
+
+    ghosts:
+        extends: polygons
+        animated: true
+        texcoords: true
+        shaders:
+            uniforms:
+                u_texture: images/ghost_strip.gif
+            transforms:
+                fragment: |
+                    float number_of_frames = 2.;
+                    float frames_per_second = 2.;
+
+                    float offset = floor(mod(u_time * frames_per_second, 2.))*.5;
+                    color.rgb = texture2D(u_texture, (vec2(v_texcoord.x/number_of_frames, v_texcoord.y) + vec2(offset, 0.))).rgb;
+                    if (color.rgb == vec3(0.)) discard;
 
 layers:
+
     earth:
-        color:
-            default: [0.175, 0.175, 0.175]
+        geometry:
+            source: osm
+            filter: earth
+        style:
+            order: 0
+            color: [0.175, 0.175, 0.175]
 
     landuse:
-        color:
-            default: [0.5, 0.875, 0.5]
-            pitch: [0.3, 0.675, 0.3]
+        geometry:
+            source: osm
+            filter: landuse
+        style:
+            order: 1
+            interactive: true
+            color: [0.5, 0.875, 0.5]
+        pitch:
+            filter:
+                kind: ['pitch', 'garden', 'playground']
+            style:
+                color: [0.3, 0.675, 0.3]
+                order: .1
 
     water:
-        mode:
-            name: water
-        color:
-            default: [0.5, 0.5, 0.875]
-        outline:
-            color:
-                default: [0.6, 0.6, 0.975]
-            width:
-                default:
+        geometry:
+            source: osm
+            filter: water
+        style:
+            # name: water
+            order: 2
+            interactive: true
+            color: [0.5, 0.5, 0.875]
+            outline:
+                color: [0.6, 0.6, 0.975]
+                width: |
                     function () {
                         return (
                             zoom >= 16 &&
@@ -323,66 +275,115 @@ layers:
                     }
 
     roads:
-        interactive: function () { return (zoom >= 18); }
-        order: function () { return feature.sort_key * .000025; }
-        # order: "function () { return (feature.sort_key * .000025) - (feature.outline ? .0001 : 0); }"
-        color:
-            # default: Style.color.randomColor
-            default: [0.4, 0.4, 0.4]
-            highway: [1.0, 1.0, 1.0]
-            # highway: 'red'
-            # highway: [[13, [0, 0, 1.]], [17, [1, .5, .5]]]
-            # highway: [[13, 'darkorchid'], [17, 'honeydew']]
-            # highway: [[13, 'hsl(900, 40%, 60%)'], [17, 'hsl(700, 90%, 80%)']]
-            major_road: [0.5, 0.5, 0.5]
-            minor_road: [0.65, 0.65, 0.65]
-            path: [0.8, 0.8, 0.8]
-            rail: [0.5, 0.0, 0.0]
-            debug: [1, 0, 0]
-        width:
-            # default: Style.pixels(5)
-            default: function () { return 2 * Math.log(zoom); }
-            highway: function () { return 3 * Math.log(zoom); }
-            # highway: [[16, 20], [17, 16], [18, 12], [19, 8], [20, 6]]
-            # highway: [[13, 3px], [15, 5px], [16, 20px]]
-            # highway: |
-            #     function() {
-            #         if (feature.is_link == 'yes' || feature.is_tunnel == 'yes') {
-            #             return [[13, '0px'], [15, '4px'], [16, '6px'], [18, '10px']];
-            #         }
-            #         return [[10, '2px'], [13, '3px'], [15, '5px'], [16, '8px'], [18, '12px']];
-            #     }
-            major_road: function () { return 2.5 * Math.log(zoom); }
-            minor_road: function () { return 2 * Math.log(zoom); }
-            path: function () { return 1 * Math.log(zoom); }
-            debug: function () { return 5; }
-        # z:
-        #     path: 25
-        outline:
-            color:
-                # default: [0.1, 0.7, 0.7]
-                default: [0.7, 0.7, 0.7]
-            width:
-                default:
-                    function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
-                highway:
-                    function () { return (zoom >= 18 && (3/8 * Math.log(zoom))); }
-                major_road:
-                    function () { return (zoom >= 18 && (2.5/8 * Math.log(zoom))); }
-                minor_road:
-                    function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
-                path:
-                    function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
-                debug:
-                    function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
+        geometry:
+            source: osm
+            filter: roads
+        style:
+            order: function () { return 3.5 + Math.min(Math.max(feature.sort_key * .000025, -1), 1) / 2; }
+            interactive: function () { return (zoom >= 18); }
+        highway:
+            filter: { kind: highway }
+            style:
+                color: [1.0, 1.0, 1.0]
+                width: function () { return 3 * Math.log(zoom); }
+                outline:
+                    color: [0.7, 0.7, 0.7]
+                    width: function () { return (zoom >= 18 && (3/8 * Math.log(zoom))); }
+            tunnel:
+                filter: { is_tunnel: yes }
+                style:
+                    color: '#333'
+                    width: function () { return 2 * Math.log(zoom); }
+                    # width: [[13, 0px], [15, 4px], [16, 6px], [18, 10px]]
+                    outline:
+                        color: white
+                        # width: [[15, 2px], [18, 6px]]
+                        # width: 2px
+                        width: function () { return 1 * Math.log(zoom); }
+        major_road:
+            filter: { kind: major_road }
+            style:
+                color: [0.5, 0.5, 0.5]
+                width: function () { return 2.5 * Math.log(zoom); }
+                outline:
+                    color: [0.7, 0.7, 0.7]
+                    width: function () { return (zoom >= 18 && (3/8 * Math.log(zoom))); }
+        minor_road:
+            filter: { kind: minor_road }
+            style:
+                color: [0.65, 0.65, 0.65]
+                width: function () { return 2 * Math.log(zoom); }
+                outline:
+                    color: [0.7, 0.7, 0.7]
+                    width: function () { return (zoom >= 18 && (2.5/8 * Math.log(zoom))); }
+        path:
+            filter:
+               kind: path
+            style:
+                color: [0.8, 0.8, 0.8]
+                width: function () { return 1 * Math.log(zoom); }
+                outline:
+                    color: [0.7, 0.7, 0.7]
+                    width: function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
+
+        rail:
+            filter: { kind: rail }
+            style:
+                color: [0.5, 0.0, 0.0]
+                width: function () { return 2 * Math.log(zoom); }
+                outline:
+                    color: [0.7, 0.7, 0.7]
+                    width: function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
 
     buildings:
-        color:
-            # default: function () { var h = feature.height || 20; h = Math.min((h + 50) / 250, 1.0); return [h, h, h]; } // shade based on height
-            # default: Style.color.randomColor
-            # default: Style.color.pseudoRandomColor
-            # default: Style.color.pseudoRandomGrayscale
-            default: function () { if (feature.name || feature.kind) { return [(feature.name && 0.6) || 0.2, 0.2, (feature.kind && 0.6) || 0.2]; } else { return [0.6, 0.6, 0.6] }; }
-        extrude:
-            default: function () { return ((zoom >= 14 && feature.height > 20) || zoom >= 16) }
-            # default: [[14, false], [15, true]]
+        geometry:
+            source: osm
+            filter: buildings
+        style:
+            order: 4
+            interactive: true
+            color: [.6, .6, .6]
+            extrude: function () { return ((zoom >= 15 && feature.height > 20) || zoom >= 16) }
+        namedBuildings:
+            filter: { name: true }
+            style:
+                color: [.6, .2, .2]
+            namedKindBuildings:
+                filter: { kind: true }
+                style:
+                    color: [.6, .2, .6]
+        kindBuildings:
+            filter: { name: false, kind: true }
+            style:
+                color: [.2, .2, .6]
+    pois:
+        geometry:
+            source: osm
+            filter: pois
+        filter: { name: true }
+        style:
+            name: points
+            size: 10px
+
+            # name: icons
+            # sprite: tree
+            # size: [[13, 16px], [14, 24px], [15, 32px]]
+
+            # visible: false
+            order: 5
+            interactive: true
+            color: [1, 1, 0]
+
+        # examples of different icons mapped to feature properties
+        restaurant:
+            filter: { kind: restaurant }
+            style:
+                sprite: restaurant
+        cafe:
+            filter: { kind: cafe }
+            style:
+                sprite: cafe
+        culture:
+            filter: { kind: [museum, library] }
+            style:
+                sprite: museum
