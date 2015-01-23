@@ -11,6 +11,7 @@
     };
 
     var map_start_location = locations['New York'];
+    var rS;
 
     /*** URL parsing ***/
 
@@ -32,6 +33,8 @@
 
     var layer = Tangram.leafletLayer({
         scene: 'styles.yaml',
+        preUpdate: preUpdate,
+        postUpdate: postUpdate,
         numWorkers: 2,
         attribution: 'Map data &copy; OpenStreetMap contributors | <a href="https://github.com/tangrams/tangram" target="_blank">Source Code</a>',
         unloadInvisibleTiles: false,
@@ -56,7 +59,27 @@
     window.addEventListener('resize', resizeMap);
     resizeMap();
 
-    // For easier debugging access
+    // Render/GL stats: http://spite.github.io/rstats/
+    var glS = new glStats();
+    glS.fractions = []; // turn this off till we need it
+
+    rS = new rStats({
+        values: {
+            frame: { caption: 'Total frame time (ms)', over: 5 },
+            raf: { caption: 'Time since last rAF (ms)' },
+            fps: { caption: 'Framerate (FPS)', below: 30 },
+            rendertiles: { caption: 'Rendered tiles' },
+            features: { caption: '# of geo features' },
+            glbuffers: { caption: 'GL buffers (MB)' }
+        },
+        CSSPath : 'lib/',
+        plugins: [glS]
+    });
+
+    // Move it to the bottom-left so it doesn't obscure zoom controls
+    var rSDOM = document.querySelector('.rs-base');
+    rSDOM.style.bottom = '0px';
+    rSDOM.style.top = 'inherit';
 
     // GUI options for rendering modes/effects
     var style_options = {
@@ -507,6 +530,31 @@
                 }
             }
         });
+    }
+
+    // Pre-render hook
+    function preUpdate (will_render) {
+        // Profiling
+        if (will_render && rS) {
+            rS('frame').start();
+            // rS('raf').tick();
+            rS('fps').frame();
+
+            if (scene.dirty) {
+                glS.start();
+            }
+        }
+    }
+
+    // Post-render hook
+    function postUpdate () {
+        if (rS != null) { // rstats
+            rS('frame').end();
+            rS('rendertiles').set(scene.renderable_tiles_count);
+            rS('glbuffers').set((scene.getDebugSum('buffer_size') / (1024*1024)).toFixed(2));
+            rS('features').set(scene.getDebugSum('features'));
+            rS().update();
+        }
     }
 
     /***** Render loop *****/
