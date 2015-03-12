@@ -14,13 +14,13 @@ halftone:
                     return smoothstep(threshold-afwidth, threshold+afwidth, value);
                 }
 
-            fragment: |
+            color: |
                 // Distance to nearest point in a grid of
                 // (frequency x frequency) points over the unit square
                 // Scale dot size for a subset of zoom
                 const float max_scale_zoom = 19.;
                 const float min_scale_zoom = 17.;
-                const float scale_zoom_factor = .25;
+                const float scale_zoom_factor = 20.;
                 float zoom_frequency = dot_frequency;
                 zoom_frequency *= 1. + ((max_scale_zoom - clamp(u_map_zoom, min_scale_zoom, max_scale_zoom)) * scale_zoom_factor);
 
@@ -52,15 +52,12 @@ colorhalftone:
     extends: polygons
     shaders:
         uniforms:
-            dot_frequency: 100.
+            dot_frequency: 50.
             dot_scale: 1.5
             true_color: false
 
         transforms:
             globals: |
-                uniform float dot_frequency;
-                uniform float dot_scale;
-                uniform bool true_color;
 
                 // Antialiasing
                 float aastep(float threshold, float value) {
@@ -70,7 +67,7 @@ colorhalftone:
                     return smoothstep(threshold-afwidth, threshold+afwidth, value);
                 }
 
-            fragment: |
+            color: |
                 // Distance to nearest point in a grid of
                 // (frequency x frequency) points over the unit square
                 // Scale dot size for a subset of zoom
@@ -88,6 +85,7 @@ colorhalftone:
                 // (there's what looks like some floating point precision crawl, but it's not too bad)
                 const float dot_wrap = 1000.;
                 st += mod(u_map_center / u_meters_per_pixel, dot_wrap) / pixel_scale;
+                // st += mod(u_map_center / u_meters_per_pixel, dot_wrap) / pixel_scale * 2.; // for retina
 
                 vec3 white = vec3(0.97);
                 vec3 black = vec3(0.1);

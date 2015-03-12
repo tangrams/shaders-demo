@@ -3,19 +3,22 @@ sources:
         type: GeoJSONTileSource
         url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.json
 
-camera:
-    type: perspective
-    # focal_length: 1
-    focal_length: [[16, 2], [17, 2.5], [18, 3], [19, 4], [20, 6]] # pairs of [zoom, focal len]
-    vanishing_point: [-250, -250] # relative to center of screen, in pixels
-
-
-lighting:
-    type: point
-    position: [0, 0, 200]
-    color: [1, 1, 1]
-    # ambient: 0.5
-    backlight: true
+cameras:
+    perspective:
+        type: perspective
+        # focal_length: 1
+        focal_length: [[16, 2], [17, 2.5], [18, 3], [19, 4], [20, 6]] # pairs of [zoom, focal len]
+        vanishing_point: [-250, -250] # relative to center of screen, in pixels
+    isometric:
+        type: isometric
+        axis: [0,1]
+ 
+lights:
+    key:
+        type: directional
+        direction: [-.2, 1, -1]
+        diffuse: 1
+        ambient: .6
 
 
 styles:
@@ -31,30 +34,6 @@ styles:
                 fragment:
                     url: shaders/noise.glsl
 
-    formica:
-        extends: polygons
-        shaders:
-            defines:
-                EFFECT_NOISE_TEXTURE: true
-            transforms:
-                globals:
-                    url: shaders/glsl-noise-periodic-3d.glsl
-                fragment:
-                    url: shaders/noise.glsl
-
-    colorbleed:
-        extends: polygons
-        animated: true
-        shaders:
-            defines:
-                EFFECT_COLOR_BLEED_ANIMATED: true
-            transforms:
-                fragment: |
-                    color .rgb+= lighting * vec3(gl_FragCoord.x / u_resolution.x, 0.0, gl_FragCoord.y / u_resolution.y);
-                    #if defined(EFFECT_COLOR_BLEED_ANIMATED)
-                        color.r += lighting.r * sin(u_time / 3.0);
-                    #endif
-
     rainbow:
         extends: polygons
         animated: true
@@ -66,7 +45,7 @@ styles:
                         vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
                         return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
                     }
-                fragment: |
+                color: |
                     vec3 c = vec3(v_world_position.z * .003 + u_time / 10., 1.0, 1.0);
                     color.rgb = hsv2rgb(c);
 
@@ -78,7 +57,7 @@ styles:
         animated: true
         shaders:
             transforms:
-                vertex: |
+                position: |
                     // Elevator buildings
                     if (position.z > 0.01) {
                         position.z *= (sin(position.z + u_time) + 1.0);
@@ -90,19 +69,6 @@ styles:
     dots:
         url: styles/dots.yaml
 
-    wood:
-        url: styles/wood.yaml
-
-    envmap:
-        extends: polygons
-        shaders:
-            defines:
-                LIGHTING_ENVIRONMENT: true
-            uniforms:
-                u_env_map: images/LitSphere_test_02.jpg
-            transforms:
-                # fragment: color = mix(color_prelight, color_prelight * lighting, sin(u_time) / 2. + .5); // fade lighting in and out
-
     halftone:
         url: styles/halftone.yaml
 
@@ -111,123 +77,6 @@ styles:
 
     windows:
         url: styles/windows.yaml
-
-    points:
-        shaders:
-            transforms:
-                fragment: color.rgb += vec3(gl_FragCoord.x / u_resolution.x, 0.0, gl_FragCoord.y / u_resolution.y);
-
-
-    icons:
-        extends: polygons
-        animated: true # only needed for bouncy effect
-        texcoords: true
-        texture:
-            url: images/poi_icons_32.png
-            filtering: nearest
-            sprites:
-                # each sprite is defined as: [x origin, y origin, width, height]
-                plane: [0, 0, 32, 32]
-                tree: [0, 185, 32, 32]
-                sunburst: [0, 629, 32, 32]
-                restaurant: [0, 777, 32, 32]
-                cafe: [0, 814, 32, 32]
-                museum: [0, 518, 32, 32]
-        shaders:
-            uniforms:
-                bouncy: true
-            transforms:
-                vertex: |
-                    // Bouncy icons
-                    if (bouncy) {
-                        position.y += sin(v_world_position.y + u_time*3.) * 10.;
-                    }
-                fragment: |
-                    //color.rgb /= lighting; // reverse lighting hack (replace w/shader lighting block/defines)
-
-    uv_test:
-        extends: polygons
-        texcoords: true
-        shaders:
-            transforms:
-                fragment: |
-                    color.rgb = vec3(v_texcoord.xy, 0.);
-                    //color.rgb = vec3(v_texcoord.x, mod(v_texcoord.y + u_time/2., 1.), 0.);
-                    //color.rgb = texture2D(u_texture, uv).rgb;
-
-    # dynamic uniform tests
-    # polygons:
-    #     texcoords: true
-    #     shaders:
-    #         uniforms:
-    #             # u_texture: images/LitSphere_test_02.jpg
-    #             # u_offset: { one: .5, two: .5 }
-
-    #             u_material:
-    #                 - texture: images/matball01.jpg
-    #                   field: 1
-
-    #                 - texture: images/sunset.jpg
-    #                   field: 2
-
-    #             u_mtex:
-    #                 - images/matball01.jpg
-    #                 - images/sunset.jpg
-
-    #             u_vecs: [[1,2,3],[4,5,6],[7,8,9]]
-
-    #             u_nested:
-    #                 one: 1
-    #                 child:
-    #                     two: 2
-
-    #         transforms:
-    #             globals: |
-    #                 /*struct Material {
-    #                     sampler2D texture;
-    #                     float field;
-    #                 };*/
-    #                 //uniform Material u_material[2];
-
-    #                 //uniform sampler2D u_mtex[2];
-    #                 //uniform vec3 u_vecs[3];
-
-    #                 varying float v_layer;
-
-    #             vertex: |
-    #                 v_layer = a_layer;
-
-    #             fragment: |
-    #                 // color = texture2D(u_texture, v_texcoord + vec2(u_offset.one, u_offset.two));
-    #                 //float t = mod(v_layer + u_vecs[0].y, 3.);
-    #                 float t = mod(v_layer + u_nested.one, 3.);
-    #                 if (t == 0.) {
-    #                     color = texture2D(u_texture, v_texcoord);
-    #                 }
-    #                 else if (t == 1.) {
-    #                     color = texture2D(u_material[0].texture, v_texcoord);
-    #                     //color = texture2D(u_mtex[0], v_texcoord);
-    #                 }
-    #                 else {
-    #                     color = texture2D(u_material[1].texture, v_texcoord);
-    #                     //color = texture2D(u_mtex[1], v_texcoord);
-    #                 }
-
-    ghosts:
-        extends: polygons
-        animated: true
-        texcoords: true
-        shaders:
-            uniforms:
-                u_texture: images/ghost_strip.gif
-            transforms:
-                fragment: |
-                    float number_of_frames = 2.;
-                    float frames_per_second = 2.;
-
-                    float offset = floor(mod(u_time * frames_per_second, 2.))*.5;
-                    color.rgb = texture2D(u_texture, (vec2(v_texcoord.x/number_of_frames, v_texcoord.y) + vec2(offset, 0.))).rgb;
-                    if (color.rgb == vec3(0.)) discard;
 
 layers:
 
@@ -281,59 +130,47 @@ layers:
         style:
             order: function () { return 3.5 + Math.min(Math.max(feature.sort_key * .000025, -1), 1) / 2; }
             interactive: function () { return (zoom >= 18); }
+            outline:
+                color: [0.7, 0.7, 0.7]
+                width: 1
         highway:
             filter: { kind: highway }
             style:
                 color: [1.0, 1.0, 1.0]
-                width: function () { return 3 * Math.log(zoom); }
-                outline:
-                    color: [0.7, 0.7, 0.7]
-                    width: function () { return (zoom >= 18 && (3/8 * Math.log(zoom))); }
+                width: 9
             tunnel:
                 filter: { is_tunnel: yes }
                 style:
                     color: '#333'
-                    width: function () { return 2 * Math.log(zoom); }
-                    # width: [[13, 0px], [15, 4px], [16, 6px], [18, 10px]]
+                    width: 6
                     outline:
                         color: white
-                        # width: [[15, 2px], [18, 6px]]
-                        # width: 2px
-                        width: function () { return 1 * Math.log(zoom); }
+                        width: 2
         major_road:
             filter: { kind: major_road }
             style:
                 color: [0.5, 0.5, 0.5]
-                width: function () { return 2.5 * Math.log(zoom); }
-                outline:
-                    color: [0.7, 0.7, 0.7]
-                    width: function () { return (zoom >= 18 && (3/8 * Math.log(zoom))); }
+                width: 5
         minor_road:
             filter: { kind: minor_road }
             style:
                 color: [0.65, 0.65, 0.65]
-                width: function () { return 2 * Math.log(zoom); }
-                outline:
-                    color: [0.7, 0.7, 0.7]
-                    width: function () { return (zoom >= 18 && (2.5/8 * Math.log(zoom))); }
+                width: 4              
         path:
             filter:
                kind: path
             style:
                 color: [0.8, 0.8, 0.8]
-                width: function () { return 1 * Math.log(zoom); }
-                outline:
-                    color: [0.7, 0.7, 0.7]
-                    width: function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
-
+                width: 3
         rail:
-            filter: { kind: rail }
+            filter:
+                kind: rail
+                not: { is_tunnel: yes }
             style:
                 color: [0.5, 0.0, 0.0]
-                width: function () { return 2 * Math.log(zoom); }
+                width: 3
                 outline:
-                    color: [0.7, 0.7, 0.7]
-                    width: function () { return (zoom >= 18 && (2/8 * Math.log(zoom))); }
+                    width: .5
 
     buildings:
         geometry:
@@ -356,34 +193,3 @@ layers:
             filter: { name: false, kind: true }
             style:
                 color: [.2, .2, .6]
-    pois:
-        geometry:
-            source: osm
-            filter: pois
-        filter: { name: true }
-        style:
-            name: points
-            size: 10px
-
-            # name: icons
-            # sprite: tree
-            # size: [[13, 16px], [14, 24px], [15, 32px]]
-
-            # visible: false
-            order: 5
-            interactive: true
-            color: [1, 1, 0]
-
-        # examples of different icons mapped to feature properties
-        restaurant:
-            filter: { kind: restaurant }
-            style:
-                sprite: restaurant
-        cafe:
-            filter: { kind: cafe }
-            style:
-                sprite: cafe
-        culture:
-            filter: { kind: [museum, library] }
-            style:
-                sprite: museum
