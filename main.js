@@ -109,29 +109,30 @@
     function addGUI () {
         gui.domElement.parentNode.style.zIndex = 5;
         window.gui = gui;
+        var folder = gui.addFolder("Click a style:");
+        folder.open(); // this just points the arrow downward
         // Styles
         gui.add(style_controls, 'Default');
         gui.add(style_controls, 'Elevator');
         gui.add(style_controls, 'Rainbow');
         
         gui.add(style_controls, 'Halftone');
-        gui.add(style_controls, 'dot_scale', 0, 10).onChange(function(value) {
-            scene.styles.halftone.shaders.uniforms.dot_scale = value;
-            scene.requestRedraw();
-        });
-        gui.add(style_controls, 'dot_frequency', 0, 5).onChange(function(value) {
+        gui.add(style_controls, 'dot_frequency', 0, 5).name("&nbsp;&nbsp;frequency").onChange(function(value) {
             scene.styles.halftone.shaders.uniforms.dot_frequency = value;
             scene.requestRedraw();
         });
-        
-
-        gui.add(style_controls, 'Colorhalftone');
-        gui.add(style_controls, 'color_dot_scale', 0, 3).onChange(function(value) {
-            scene.styles.colorhalftone.shaders.uniforms.dot_scale = value;
+        gui.add(style_controls, 'dot_scale', 0, 10).name("&nbsp;&nbsp;scale").onChange(function(value) {
+            scene.styles.halftone.shaders.uniforms.dot_scale = value;
             scene.requestRedraw();
         });
-        gui.add(style_controls, 'color_dot_frequency', 0, 100).onChange(function(value) {
+
+        gui.add(style_controls, 'Colorhalftone');
+        gui.add(style_controls, 'color_dot_frequency', 0, 100).name("&nbsp;&nbsp;frequency").onChange(function(value) {
             scene.styles.colorhalftone.shaders.uniforms.dot_frequency = value;
+            scene.requestRedraw();
+        });
+        gui.add(style_controls, 'color_dot_scale', 0, 3).name("&nbsp;&nbsp;scale").onChange(function(value) {
+            scene.styles.colorhalftone.shaders.uniforms.dot_scale = value;
             scene.requestRedraw();
         });
         
