@@ -2,6 +2,8 @@
 
 A demo showing some ways to use GLSL shaders to draw maps with the [Tangram](http://github.com/tangrams/tangram) library.
 
+![shaders-demo screenshot](https://cloud.githubusercontent.com/assets/459970/6629447/7fa6bf9a-c8e4-11e4-86ba-90d108237e48.png)
+
 ### To view:
 
 [http://tangrams.github.io/shaders-demo](http://tangrams.github.io/shaders-demo)
