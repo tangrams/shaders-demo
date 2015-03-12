@@ -2,9 +2,11 @@
 halftone:
     extends: polygons
     shaders:
+        uniforms:
+            dot_frequency: 100.4748637184972
+            dot_scale: 1.5
         transforms:
             globals: |
-                const float dot_frequency = 100.4748637184972;
 
                 // Antialiasing
                 float aastep(float threshold, float value) {
@@ -35,7 +37,7 @@ halftone:
 
                 // Rotate dot & find nearest dot distance
                 vec2 st2 = mat2(0.707, -0.707, 0.707, 0.707) * st;
-                vec2 nearest = 2.0 * fract(zoom_frequency * st2) - 1.0;
+                vec2 nearest = dot_scale * fract(zoom_frequency * st2) - 1.0;
                 float dist = length(nearest);
 
                 // Modulate the size of the dots

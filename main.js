@@ -74,9 +74,13 @@
         'Halftone' : function() {
             this.setstyle(Object.keys(scene.config.layers), 'halftone');
         },
+        'dot_frequency' : 2,
+        'dot_scale' : 1.5,
         'Colorhalftone' : function() {
             this.setstyle(Object.keys(scene.config.layers), 'colorhalftone');
         },
+        'color_dot_frequency' : 50,
+        'color_dot_scale' : 1.5,
         'Windows' : function() {
             this.setstyle(['buildings'], 'windows', 'isometric');
         },
@@ -109,8 +113,28 @@
         gui.add(style_controls, 'Default');
         gui.add(style_controls, 'Elevator');
         gui.add(style_controls, 'Rainbow');
+        
         gui.add(style_controls, 'Halftone');
+        gui.add(style_controls, 'dot_scale', 0, 10).onChange(function(value) {
+            scene.styles.halftone.shaders.uniforms.dot_scale = value;
+            scene.requestRedraw();
+        });
+        gui.add(style_controls, 'dot_frequency', 0, 5).onChange(function(value) {
+            scene.styles.halftone.shaders.uniforms.dot_frequency = value;
+            scene.requestRedraw();
+        });
+        
+
         gui.add(style_controls, 'Colorhalftone');
+        gui.add(style_controls, 'color_dot_scale', 0, 3).onChange(function(value) {
+            scene.styles.colorhalftone.shaders.uniforms.dot_scale = value;
+            scene.requestRedraw();
+        });
+        gui.add(style_controls, 'color_dot_frequency', 0, 100).onChange(function(value) {
+            scene.styles.colorhalftone.shaders.uniforms.dot_frequency = value;
+            scene.requestRedraw();
+        });
+        
         gui.add(style_controls, 'Windows');
     }
 
