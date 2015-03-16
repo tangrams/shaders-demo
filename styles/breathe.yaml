@@ -5,7 +5,7 @@ breathe:
         uniforms:
             u_breathe_scale: 10
             u_breathe_speed: 1
-        transforms:
+        blocks:
             globals: |
                 uniform float u_breathe_scale;
                 uniform float u_breathe_speed;

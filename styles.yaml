@@ -28,7 +28,7 @@ styles:
         shaders:
             defines:
                 EFFECT_NOISE_ANIMATED: true
-            transforms:
+            blocks:
                 globals:
                     url: shaders/glsl-noise-periodic-3d.glsl
                 fragment:
@@ -38,7 +38,7 @@ styles:
         extends: polygons
         animated: true
         shaders:
-            transforms:
+            blocks:
                 globals: |
                     vec3 hsv2rgb(vec3 c) {
                         vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -56,7 +56,7 @@ styles:
         extends: polygons
         animated: true
         shaders:
-            transforms:
+            blocks:
                 position: |
                     // Elevator buildings
                     if (position.z > 0.01) {
@@ -81,7 +81,7 @@ styles:
 layers:
 
     earth:
-        geometry:
+        data:
             source: osm
             filter: earth
         style:
@@ -89,7 +89,7 @@ layers:
             color: [0.175, 0.175, 0.175]
 
     landuse:
-        geometry:
+        data:
             source: osm
             filter: landuse
         style:
@@ -104,7 +104,7 @@ layers:
                 order: .1
 
     water:
-        geometry:
+        data:
             source: osm
             filter: water
         style:
@@ -124,7 +124,7 @@ layers:
                     }
 
     roads:
-        geometry:
+        data:
             source: osm
             filter: roads
         style:
@@ -173,7 +173,7 @@ layers:
                     width: .5
 
     buildings:
-        geometry:
+        data:
             source: osm
             filter: buildings
         style:
