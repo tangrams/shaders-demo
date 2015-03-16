@@ -5,7 +5,7 @@ halftone:
         uniforms:
             dot_frequency: 100.4748637184972
             dot_scale: 1.5
-        transforms:
+        blocks:
             globals: |
 
                 // Antialiasing
@@ -58,7 +58,7 @@ colorhalftone:
             dot_scale: 1.5
             true_color: false
 
-        transforms:
+        blocks:
             globals: |
 
                 // Antialiasing
