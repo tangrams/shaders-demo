@@ -83,7 +83,7 @@ layers:
     earth:
         data:
             source: osm
-            filter: earth
+            layer: earth
         style:
             order: 0
             color: [0.175, 0.175, 0.175]
@@ -91,7 +91,7 @@ layers:
     landuse:
         data:
             source: osm
-            filter: landuse
+            layer: landuse
         style:
             order: 1
             interactive: true
@@ -106,7 +106,7 @@ layers:
     water:
         data:
             source: osm
-            filter: water
+            layer: water
         style:
             # name: water
             order: 2
@@ -126,7 +126,7 @@ layers:
     roads:
         data:
             source: osm
-            filter: roads
+            layer: roads
         style:
             order: function () { return 3.5 + Math.min(Math.max(feature.sort_key * .000025, -1), 1) / 2; }
             interactive: function () { return (zoom >= 18); }
@@ -175,7 +175,7 @@ layers:
     buildings:
         data:
             source: osm
-            filter: buildings
+            layer: buildings
         style:
             order: 4
             interactive: true
