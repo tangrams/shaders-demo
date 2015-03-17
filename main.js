@@ -65,6 +65,11 @@
         'Elevator' : function() {
             this.setstyle(['buildings'], 'elevator');
         },
+        'Popup' : function() {
+            this.setstyle(['buildings'], 'popup');
+        },
+        'radius': 300,
+        'height': 3,
         'Rainbow' : function() {
             this.setstyle(['buildings','landuse'], 'rainbow');
         },
@@ -114,6 +119,15 @@
         // Styles
         gui.add(style_controls, 'Default');
         gui.add(style_controls, 'Elevator');
+        gui.add(style_controls, 'Popup');
+        gui.add(style_controls, 'radius', 0, 500).name("&nbsp;&nbsp;radius").onChange(function(value) {
+            scene.styles.popup.shaders.uniforms.u_popup_radius = value;
+            scene.requestRedraw();
+        });
+        gui.add(style_controls, 'height', 0, 5).name("&nbsp;&nbsp;amount").onChange(function(value) {
+            scene.styles.popup.shaders.uniforms.u_popup_height = value;
+            scene.requestRedraw();
+        });
         gui.add(style_controls, 'Rainbow');
         
         gui.add(style_controls, 'Halftone');
