@@ -79,7 +79,7 @@
         'Halftone' : function() {
             this.setstyle(Object.keys(scene.config.layers), 'halftone');
         },
-        'dot_frequency' : 2,
+        'dot_frequency' : 100,
         'dot_scale' : 1.5,
         'Colorhalftone' : function() {
             this.setstyle(Object.keys(scene.config.layers), 'colorhalftone');
@@ -131,7 +131,7 @@
         gui.add(style_controls, 'Rainbow');
         
         gui.add(style_controls, 'Halftone');
-        gui.add(style_controls, 'dot_frequency', 0, 5).name("&nbsp;&nbsp;frequency").onChange(function(value) {
+        gui.add(style_controls, 'dot_frequency', 1, 200).name("&nbsp;&nbsp;frequency").onChange(function(value) {
             scene.styles.halftone.shaders.uniforms.dot_frequency = value;
             scene.requestRedraw();
         });
