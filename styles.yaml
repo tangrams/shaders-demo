@@ -1,6 +1,6 @@
 sources:
     osm:
-        type: MVTSource
+        type: MVT
         url:  http://vector.mapzen.com/osm/all/{z}/{x}/{y}.mapbox
 
 cameras:
@@ -23,7 +23,7 @@ lights:
 
 styles:
     water:
-        extends: polygons
+        base: polygons
         animated: true
         shaders:
             defines:
@@ -35,7 +35,7 @@ styles:
                     url: shaders/noise.glsl
 
     rainbow:
-        extends: polygons
+        base: polygons
         animated: true
         shaders:
             blocks:
@@ -53,7 +53,7 @@ styles:
         url: styles/popup.yaml
 
     elevator:
-        extends: polygons
+        base: polygons
         animated: true
         shaders:
             blocks:
@@ -117,9 +117,9 @@ layers:
                 width: |
                     function () {
                         return (
-                            zoom >= 16 &&
+                            $zoom >= 16 &&
                             (feature.kind != 'ocean' && feature.kind != 'riverbank') &&
-                            (2.5 * Math.log(zoom))
+                            (2.5 * Math.log($zoom))
                         );
                     }
 
@@ -129,7 +129,7 @@ layers:
             layer: roads
         style:
             order: function () { return 3.5 + Math.min(Math.max(feature.sort_key * .000025, -1), 1) / 2; }
-            interactive: function () { return (zoom >= 18); }
+            interactive: function () { return ($zoom >= 18); }
             outline:
                 color: [0.7, 0.7, 0.7]
                 width: 1
@@ -180,7 +180,7 @@ layers:
             order: 4
             interactive: true
             color: [.6, .6, .6]
-            extrude: function () { return ((zoom >= 15 && feature.height > 20) || zoom >= 16) }
+            extrude: function () { return (($zoom >= 15 && feature.height > 20) || $zoom >= 16) }
         namedBuildings:
             filter: { name: true }
             style:
