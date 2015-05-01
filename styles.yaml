@@ -29,7 +29,7 @@ styles:
             defines:
                 EFFECT_NOISE_ANIMATED: true
             blocks:
-                globals:
+                global:
                     url: shaders/glsl-noise-periodic-3d.glsl
                 fragment:
                     url: shaders/noise.glsl
@@ -39,7 +39,7 @@ styles:
         animated: true
         shaders:
             blocks:
-                globals: |
+                global: |
                     vec3 hsv2rgb(vec3 c) {
                         vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
                         vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
@@ -79,40 +79,44 @@ styles:
         url: styles/windows.yaml
 
 layers:
-
     earth:
         data:
             source: osm
             layer: earth
-        style:
-            order: 0
-            color: [0.175, 0.175, 0.175]
+        draw:
+            polygons:
+                order: 0
+                color: [0.175, 0.175, 0.175]
 
     landuse:
         data:
             source: osm
             layer: landuse
-        style:
-            order: 1
-            interactive: true
-            color: [0.5, 0.875, 0.5]
+        draw:
+            polygons:
+                order: 1
+                interactive: true
+                color: [0.5, 0.875, 0.5]
         pitch:
             filter:
                 kind: ['pitch', 'garden', 'playground']
-            style:
-                color: [0.3, 0.675, 0.3]
-                order: .1
+            draw:
+                polygons:
+                    color: [0.3, 0.675, 0.3]
+                    order: .1
 
     water:
         data:
             source: osm
             layer: water
-        style:
-            # name: water
-            order: 2
-            interactive: true
-            color: [0.5, 0.5, 0.875]
+        draw:
+            polygons:
+                # style: water
+                order: 2
+                interactive: true
+                color: [0.5, 0.5, 0.875]
             outline:
+                style: lines
                 color: [0.6, 0.6, 0.975]
                 width: |
                     function () {
@@ -127,69 +131,83 @@ layers:
         data:
             source: osm
             layer: roads
-        style:
-            order: function () { return 3.5 + Math.min(Math.max(feature.sort_key * .000025, -1), 1) / 2; }
-            interactive: function () { return ($zoom >= 18); }
+        draw:
+            lines:
+                order: function () { return 3.5 + Math.min(Math.max(feature.sort_key * .000025, -1), 1) / 2; }
+                interactive: function () { return ($zoom >= 18); }
             outline:
+                style: lines
                 color: [0.7, 0.7, 0.7]
                 width: 1
         highway:
             filter: { kind: highway }
-            style:
-                color: [1.0, 1.0, 1.0]
-                width: 9
+            draw:
+                lines:
+                    color: [1.0, 1.0, 1.0]
+                    width: 9
             tunnel:
                 filter: { is_tunnel: yes }
-                style:
-                    color: '#333'
-                    width: 6
+                draw:
+                    lines:
+                        color: '#333'
+                        width: 6
                     outline:
+                        style: lines
                         color: white
-                        width: 2
+                        width: 8
         major_road:
             filter: { kind: major_road }
-            style:
-                color: [0.5, 0.5, 0.5]
-                width: 5
+            draw:
+                lines:
+                    color: [0.5, 0.5, 0.5]
+                    width: 5
         minor_road:
             filter: { kind: minor_road }
-            style:
-                color: [0.65, 0.65, 0.65]
-                width: 4              
+            draw:
+                lines:
+                    color: [0.65, 0.65, 0.65]
+                    width: 4              
         path:
             filter:
                kind: path
-            style:
-                color: [0.8, 0.8, 0.8]
-                width: 3
+            draw:
+                lines:
+                    color: [0.8, 0.8, 0.8]
+                    width: 3
         rail:
             filter:
                 kind: rail
                 not: { is_tunnel: yes }
-            style:
-                color: [0.5, 0.0, 0.0]
-                width: 3
+            draw:
+                lines:
+                    color: [0.5, 0.0, 0.0]
+                    width: 3
                 outline:
-                    width: .5
+                    style: lines
+                    width: 4
 
     buildings:
         data:
             source: osm
             layer: buildings
-        style:
-            order: 4
-            interactive: true
-            color: [.6, .6, .6]
-            extrude: function () { return (($zoom >= 15 && feature.height > 20) || $zoom >= 16) }
+        draw:
+            polygons:
+                order: 4
+                interactive: true
+                color: [.6, .6, .6]
+                extrude: function () { return (($zoom >= 15 && feature.height > 20) || $zoom >= 16) }
         namedBuildings:
             filter: { name: true }
-            style:
-                color: [.6, .2, .2]
+            draw:
+                polygons:
+                    color: [.6, .2, .2]
             namedKindBuildings:
                 filter: { kind: true }
-                style:
-                    color: [.6, .2, .6]
+                draw:
+                    polygons:
+                        color: [.6, .2, .6]
         kindBuildings:
             filter: { name: false, kind: true }
-            style:
-                color: [.2, .2, .6]
+            draw:
+                polygons:
+                    color: [.2, .2, .6]

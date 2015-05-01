@@ -6,7 +6,7 @@ halftone:
             dot_frequency: 100.4748637184972
             dot_scale: 2
         blocks:
-            globals: |
+            global: |
                 // Antialiasing
                 float aastep(float threshold, const float freq, float value) {
                     const float scale = 2.;
@@ -60,7 +60,7 @@ colorhalftone:
             true_color: false
 
         blocks:
-            globals: |
+            global: |
 
                 // Antialiasing
                 float aastep(float threshold, const float freq, float value) {

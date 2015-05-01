@@ -6,7 +6,7 @@ breathe:
             u_breathe_scale: 10
             u_breathe_speed: 1
         blocks:
-            globals: |
+            global: |
                 uniform float u_breathe_scale;
                 uniform float u_breathe_speed;
             vertex: |

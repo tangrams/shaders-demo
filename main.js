@@ -92,11 +92,21 @@
         setstyle: function (layers, newstyle, camera) {
             // Restore initial state
             for (var i in scene.config.layers) {
-                scene.config.layers[i].style.name = undefined;
+                try {
+                    scene.config.layers[i].draw.polygons.style = undefined;
+                }
+                catch(e) {
+                    scene.config.layers[i].draw.lines.style = undefined;
+                }
             };
             // Apply new style
             for (var j=0; j < layers.length; j++) {
-                scene.config.layers[layers[j]].style.name = newstyle;
+                try {
+                    scene.config.layers[layers[j]].draw.polygons.style = newstyle;
+                }
+                catch(e) {
+                    scene.config.layers[layers[j]].draw.lines.style = newstyle;
+                }
             }
             // Set camera
             if (camera) {
