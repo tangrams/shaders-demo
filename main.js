@@ -33,7 +33,7 @@
     var layer = Tangram.leafletLayer({
         scene: 'scene.yaml',
         numWorkers: 2,
-        attribution: 'Map data &copy; OpenStreetMap contributors | <a href="https://github.com/tangrams/tangram" target="_blank">Source Code</a>',
+        attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/" target="_blank">Mapzen</a>',
         unloadInvisibleTiles: false,
         updateWhenIdle: false
     });
