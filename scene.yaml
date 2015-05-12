@@ -12,7 +12,7 @@ cameras:
     isometric:
         type: isometric
         axis: [0,1]
- 
+
 lights:
     key:
         type: directional
@@ -103,7 +103,7 @@ layers:
             draw:
                 polygons:
                     color: [0.3, 0.675, 0.3]
-                    order: .1
+                    order: 2
 
     water:
         data:
@@ -112,11 +112,12 @@ layers:
         draw:
             polygons:
                 # style: water
-                order: 2
+                order: 3
                 interactive: true
                 color: [0.5, 0.5, 0.875]
             outline:
                 style: lines
+                order: 4
                 color: [0.6, 0.6, 0.975]
                 width: |
                     function () {
@@ -133,12 +134,12 @@ layers:
             layer: roads
         draw:
             lines:
-                order: function () { return 3.5 + Math.min(Math.max(feature.sort_key * .000025, -1), 1) / 2; }
+                order: function () { return feature.sort_key + 5; }
                 interactive: function () { return ($zoom >= 18); }
-            outline:
-                style: lines
-                color: [0.7, 0.7, 0.7]
-                width: 1
+                outline:
+                    order: 4
+                    color: [0.7, 0.7, 0.7]
+                    width: 1
         highway:
             filter: { kind: highway }
             draw:
@@ -151,10 +152,9 @@ layers:
                     lines:
                         color: '#333'
                         width: 6
-                    outline:
-                        style: lines
-                        color: white
-                        width: 8
+                        outline:
+                            color: white
+                            width: 1
         major_road:
             filter: { kind: major_road }
             draw:
@@ -166,7 +166,7 @@ layers:
             draw:
                 lines:
                     color: [0.65, 0.65, 0.65]
-                    width: 4              
+                    width: 4
         path:
             filter:
                kind: path
@@ -182,9 +182,8 @@ layers:
                 lines:
                     color: [0.5, 0.0, 0.0]
                     width: 3
-                outline:
-                    style: lines
-                    width: 4
+                    outline:
+                        width: .5
 
     buildings:
         data:
@@ -192,7 +191,7 @@ layers:
             layer: buildings
         draw:
             polygons:
-                order: 4
+                order: 50
                 interactive: true
                 color: [.6, .6, .6]
                 extrude: function () { return (($zoom >= 15 && feature.height > 20) || $zoom >= 16) }
