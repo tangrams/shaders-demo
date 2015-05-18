@@ -112,7 +112,6 @@ layers:
             layer: water
         draw:
             polygons:
-<<<<<<< HEAD
                 order: 2
                 color: [0.5, 0.5, 0.875]
         outline:
@@ -128,24 +127,6 @@ layers:
                                 $zoom >= 16 && (2.5 * Math.log($zoom))
                             );
                         }
-=======
-                # style: water
-                order: 3
-                interactive: true
-                color: [0.5, 0.5, 0.875]
-            outline:
-                style: lines
-                order: 4
-                color: [0.6, 0.6, 0.975]
-                width: |
-                    function () {
-                        return (
-                            $zoom >= 16 &&
-                            (feature.kind != 'ocean' && feature.kind != 'riverbank') &&
-                            (2.5 * Math.log($zoom))
-                        );
-                    }
->>>>>>> 9db5286bc376a5f4cb1f85786669dd7f518e1db6
 
     roads:
         data:
@@ -153,15 +134,8 @@ layers:
             layer: roads
         draw:
             lines:
-<<<<<<< HEAD
                 order: function () { return 3 + feature.sort_key; }
                 outline:
-=======
-                order: function () { return feature.sort_key + 5; }
-                interactive: function () { return ($zoom >= 18); }
-                outline:
-                    order: 4
->>>>>>> 9db5286bc376a5f4cb1f85786669dd7f518e1db6
                     color: [0.7, 0.7, 0.7]
                     width: 1
         highway:
@@ -178,11 +152,7 @@ layers:
                         width: 6
                         outline:
                             color: white
-<<<<<<< HEAD
-                            width: 8
-=======
                             width: 1
->>>>>>> 9db5286bc376a5f4cb1f85786669dd7f518e1db6
         major_road:
             filter: { kind: major_road }
             draw:
@@ -211,11 +181,7 @@ layers:
                     color: [0.5, 0.0, 0.0]
                     width: 3
                     outline:
-<<<<<<< HEAD
-                        width: 4
-=======
                         width: .5
->>>>>>> 9db5286bc376a5f4cb1f85786669dd7f518e1db6
 
     buildings:
         data:
@@ -224,10 +190,6 @@ layers:
         draw:
             polygons:
                 order: 50
-<<<<<<< HEAD
-=======
-                interactive: true
->>>>>>> 9db5286bc376a5f4cb1f85786669dd7f518e1db6
                 color: [.6, .6, .6]
                 # at z15, only extrude buildings over 20 m; at z16 and higher, extrude all buildings
                 extrude: function () { return (($zoom >= 15 && feature.height > 20) || $zoom >= 16) }
