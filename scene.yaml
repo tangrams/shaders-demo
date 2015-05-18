@@ -20,7 +20,6 @@ lights:
         diffuse: 1
         ambient: .6
 
-
 styles:
     water:
         base: polygons
@@ -40,12 +39,15 @@ styles:
         shaders:
             blocks:
                 global: |
+                    // hue-saturation-value to RGB color space converter, to allow hue cycling
                     vec3 hsv2rgb(vec3 c) {
                         vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
                         vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
                         return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
                     }
                 color: |
+                    // set an hsv value with hue varied by z-position (aka height) and by time
+                    // then convert to rgb and set pixel color
                     vec3 c = vec3(v_world_position.z * .003 + u_time / 10., 1.0, 1.0);
                     color.rgb = hsv2rgb(c);
 
@@ -95,7 +97,6 @@ layers:
         draw:
             polygons:
                 order: 1
-                interactive: true
                 color: [0.5, 0.875, 0.5]
         pitch:
             filter:
@@ -111,21 +112,21 @@ layers:
             layer: water
         draw:
             polygons:
-                # style: water
                 order: 2
-                interactive: true
                 color: [0.5, 0.5, 0.875]
-            outline:
-                style: lines
-                color: [0.6, 0.6, 0.975]
-                width: |
-                    function () {
-                        return (
-                            $zoom >= 16 &&
-                            (feature.kind != 'ocean' && feature.kind != 'riverbank') &&
-                            (2.5 * Math.log($zoom))
-                        );
-                    }
+        outline:
+            # don't draw outlines on ocean or riverbank features
+            filter: {not: {kind: [ocean, river, riverbank]}}
+            draw:
+                lines:
+                    color: [0.6, 0.6, 0.975]
+                    order: 2
+                    width: |
+                        function () {
+                            return (
+                                $zoom >= 16 && (2.5 * Math.log($zoom))
+                            );
+                        }
 
     roads:
         data:
@@ -133,12 +134,10 @@ layers:
             layer: roads
         draw:
             lines:
-                order: function () { return 3.5 + Math.min(Math.max(feature.sort_key * .000025, -1), 1) / 2; }
-                interactive: function () { return ($zoom >= 18); }
-            outline:
-                style: lines
-                color: [0.7, 0.7, 0.7]
-                width: 1
+                order: function () { return 3 + feature.sort_key; }
+                outline:
+                    color: [0.7, 0.7, 0.7]
+                    width: 1
         highway:
             filter: { kind: highway }
             draw:
@@ -151,10 +150,9 @@ layers:
                     lines:
                         color: '#333'
                         width: 6
-                    outline:
-                        style: lines
-                        color: white
-                        width: 8
+                        outline:
+                            color: white
+                            width: 8
         major_road:
             filter: { kind: major_road }
             draw:
@@ -182,9 +180,8 @@ layers:
                 lines:
                     color: [0.5, 0.0, 0.0]
                     width: 3
-                outline:
-                    style: lines
-                    width: 4
+                    outline:
+                        width: 4
 
     buildings:
         data:
@@ -192,20 +189,23 @@ layers:
             layer: buildings
         draw:
             polygons:
-                order: 4
-                interactive: true
+                order: 50
                 color: [.6, .6, .6]
+                # at z15, only extrude buildings over 20 m; at z16 and higher, extrude all buildings
                 extrude: function () { return (($zoom >= 15 && feature.height > 20) || $zoom >= 16) }
+        # buildings with a name only
         namedBuildings:
             filter: { name: true }
             draw:
                 polygons:
                     color: [.6, .2, .2]
+            # buildings with a name and a kind
             namedKindBuildings:
                 filter: { kind: true }
                 draw:
                     polygons:
                         color: [.6, .2, .6]
+        # buildings with a kind only
         kindBuildings:
             filter: { name: false, kind: true }
             draw:
