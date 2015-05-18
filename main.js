@@ -46,16 +46,6 @@
 
     var hash = new L.Hash(map);
 
-    // Resize map to window
-    function resizeMap() {
-        document.getElementById('map').style.width = window.innerWidth + 'px';
-        document.getElementById('map').style.height = window.innerHeight + 'px';
-        map.invalidateSize(false);
-    }
-
-    window.addEventListener('resize', resizeMap);
-    resizeMap();
-
 
     // GUI options for rendering modes/effects
     var style_controls = {
