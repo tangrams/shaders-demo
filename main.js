@@ -1,7 +1,7 @@
 /*jslint browser: true*/
 /*global Tangram, gui */
 
-(function () {
+map = (function () {
     'use strict';
 
     var locations = {
@@ -154,6 +154,7 @@
     }
 
 
+
     /***** Render loop *****/
     window.addEventListener('load', function () {
         // Scene initialized
@@ -163,6 +164,8 @@
         layer.addTo(map);
 
     });
+
+    return map;
 
 
 }());
