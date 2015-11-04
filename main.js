@@ -4,13 +4,7 @@
 map = (function () {
     'use strict';
 
-    var locations = {
-        'London': [51.508, -0.105, 15],
-        'New York': [40.70531887544228, -74.00976419448853, 16],
-        'Seattle': [47.609722, -122.333056, 15]
-    };
-
-    var map_start_location = locations['New York'];
+    var map_start_location = [40.70531887544228, -74.00976419448853, 16]; // NYC
 
     /*** URL parsing ***/
 
@@ -32,10 +26,7 @@ map = (function () {
 
     var layer = Tangram.leafletLayer({
         scene: 'scene.yaml',
-        numWorkers: 2,
-        attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/" target="_blank">Mapzen</a>',
-        unloadInvisibleTiles: false,
-        updateWhenIdle: false
+        attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/" target="_blank">Mapzen</a>'
     });
 
     window.layer = layer;
