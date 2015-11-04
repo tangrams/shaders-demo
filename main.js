@@ -112,7 +112,7 @@ map = (function () {
     // Create dat GUI
     var gui = new dat.GUI({ autoPlace: true });
     function addGUI () {
-        gui.domElement.parentNode.style.zIndex = 5;
+        gui.domElement.parentNode.style.zIndex = 500;
         window.gui = gui;
         var folder = gui.addFolder("Click a style:");
         folder.open(); // this just points the arrow downward
