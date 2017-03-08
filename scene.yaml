@@ -1,3 +1,5 @@
+import: [styles/popup.yaml, styles/breathe.yaml, styles/dots.yaml, styles/halftone.yaml, styles/halftone.yaml, styles/windows.yaml]
+
 sources:
     osm:
         type: TopoJSON
@@ -52,9 +54,6 @@ styles:
                     vec3 c = vec3(worldPosition().z * .003 + u_time / 10., 1.0, 1.0);
                     color.rgb = hsv2rgb(c);
 
-    popup:
-        url: styles/popup.yaml
-
     elevator:
         base: polygons
         animated: true
@@ -65,21 +64,6 @@ styles:
                     if (position.z > 0.01) {
                         position.z *= (sin(position.z + u_time) + 1.0);
                     }
-
-    breathe:
-        url: styles/breathe.yaml
-
-    dots:
-        url: styles/dots.yaml
-
-    halftone:
-        url: styles/halftone.yaml
-
-    colorhalftone:
-        url: styles/halftone.yaml
-
-    windows:
-        url: styles/windows.yaml
 
 layers:
     earth:
