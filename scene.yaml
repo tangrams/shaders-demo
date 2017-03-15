@@ -3,7 +3,9 @@ import: [styles/popup.yaml, styles/breathe.yaml, styles/dots.yaml, styles/halfto
 sources:
     osm:
         type: TopoJSON
-        url:  https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=vector-tiles-HqUVidw
+        url:  https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson
+        url_params:
+            api_key: vector-tiles-HqUVidw
         max_zoom: 16
 
 cameras:
