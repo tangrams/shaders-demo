@@ -1,4 +1,10 @@
-import: [styles/popup.yaml, styles/breathe.yaml, styles/dots.yaml, styles/halftone.yaml, styles/halftone.yaml, styles/windows.yaml]
+import:
+    - styles/popup.yaml
+    - styles/breathe.yaml
+    - styles/dots.yaml
+    - styles/halftone.yaml
+    - styles/halftone.yaml
+    - styles/windows.yaml
 
 sources:
     mapzen:
@@ -8,6 +14,7 @@ sources:
             api_key: NaqqS33fTUmyQcvbuIUCKA
         tile_size: 512
         max_zoom: 16
+
 cameras:
     perspective:
         type: perspective
@@ -26,18 +33,6 @@ lights:
         ambient: .6
 
 styles:
-    water:
-        base: polygons
-        animated: true
-        shaders:
-            defines:
-                EFFECT_NOISE_ANIMATED: true
-            blocks:
-                global:
-                    url: shaders/glsl-noise-periodic-3d.glsl
-                color:
-                    url: shaders/noise.glsl
-
     rainbow:
         base: polygons
         animated: true
