@@ -1,13 +1,13 @@
 import: [styles/popup.yaml, styles/breathe.yaml, styles/dots.yaml, styles/halftone.yaml, styles/halftone.yaml, styles/windows.yaml]
 
 sources:
-    osm:
-        type: TopoJSON
-        url:  https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson
+    mapzen:
+        type: MVT
+        url: https://tile.nextzen.org/tilezen/vector/v1/512/all/{z}/{x}/{y}.mvt
         url_params:
-            api_key: vector-tiles-HqUVidw
+            api_key: NaqqS33fTUmyQcvbuIUCKA
+        tile_size: 512
         max_zoom: 16
-
 cameras:
     perspective:
         type: perspective
@@ -70,20 +70,20 @@ styles:
 layers:
     earth:
         data:
-            source: osm
+            source: mapzen
             layer: earth
         draw:
             polygons:
-                order: function() { return feature.sort_key; }
+                order: function() { return feature.sort_rank; }
                 color: [0.175, 0.175, 0.175]
 
     landuse:
         data:
-            source: osm
+            source: mapzen
             layer: landuse
         draw:
             polygons:
-                order: function() { return feature.sort_key; }
+                order: function() { return feature.sort_rank; }
                 color: [0.5, 0.875, 0.5]
         pitch:
             filter:
@@ -94,11 +94,11 @@ layers:
 
     water:
         data:
-            source: osm
+            source: mapzen
             layer: water
         draw:
             polygons:
-                order: function() { return feature.sort_key; }
+                order: function() { return feature.sort_rank; }
                 color: [0.5, 0.5, 0.875]
         outline:
             # don't draw outlines on ocean or riverbank features
@@ -106,7 +106,7 @@ layers:
             draw:
                 lines:
                     color: [0.6, 0.6, 0.975]
-                    order: function() { return feature.sort_key; }
+                    order: function() { return feature.sort_rank; }
                     width: function () {
                             return (
                                 $zoom >= 16 && (2.5 * Math.log($zoom))
@@ -115,11 +115,11 @@ layers:
 
     roads:
         data:
-            source: osm
+            source: mapzen
             layer: roads
         draw:
             lines:
-                order: function () { return feature.sort_key; }
+                order: function () { return feature.sort_rank; }
                 outline:
                     color: [0.7, 0.7, 0.7]
                     width: 1
@@ -172,11 +172,11 @@ layers:
 
     buildings:
         data:
-            source: osm
+            source: mapzen
             layer: buildings
         draw:
             polygons:
-                order: function() { return feature.sort_key; }
+                order: function() { return feature.sort_rank; }
                 color: [.6, .6, .6]
                 # at z15, only extrude buildings over 20 m; at z16 and higher, extrude all buildings
                 extrude: function () { return (($zoom >= 15 && feature.height > 20) || $zoom >= 16) }
